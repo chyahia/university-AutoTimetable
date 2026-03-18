@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>القاموس البلاغي الرقمي - منشئ الجداول</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* تنسيقات مبدئية سريعة للشريط والتبويبات حتى ننقلها لـ style.css لاحقاً */
+        .global-header { display: flex; justify-content: space-between; padding: 10px 20px; background: #2c3e50; color: white; }
+        .tabs-nav { 
+            display: flex; 
+            background: #ecf0f1; 
+            border-bottom: 2px solid #bdc3c7; 
+            
+            /* الخصائص الجديدة لتثبيت الشريط */
+            position: sticky;
+            top: 63px; /* ارتفاع الشريط الأسود العلوي تقريباً */
+            z-index: 998; /* لضمان بقائه فوق المحتوى وتحت الشريط العلوي مباشرة */
+        }
+        .tab-btn { padding: 12px 20px; border: none; background: none; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .tab-btn.active { background: #3498db; color: white; border-bottom: 3px solid #2980b9; }
+        .tab-content { display: none; padding: 20px; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+
+    <header style="background-color: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000;">
+        <h1 style="margin: 0; font-size: 28px; font-weight: 900; letter-spacing: 1px;">📅 نظام الجداول الدراسية</h1>
+        
+        <div style="display: flex; gap: 10px;">
+            <button id="btn-save-settings" style="background-color: #27ae60; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 15px; font-weight: bold; transition: 0.2s;" onmouseover="this.style.backgroundColor='#2ecc71'" onmouseout="this.style.backgroundColor='#27ae60'">💾 حفظ الإعدادات</button>
+            
+            <button id="btn-save-as" style="background-color: #2980b9; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 15px; font-weight: bold; transition: 0.2s;" onmouseover="this.style.backgroundColor='#3498db'" onmouseout="this.style.backgroundColor='#2980b9'">📁 حفظ باسم...</button>
+            
+            <button id="btn-restore" style="background-color: #8e44ad; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 15px; font-weight: bold; transition: 0.2s;" onmouseover="this.style.backgroundColor='#9b59b6'" onmouseout="this.style.backgroundColor='#8e44ad'">🔄 استعادة</button>
+
+            <button id="btn-delete-profile" style="background-color: #e67e22; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 15px; font-weight: bold; transition: 0.2s;" onmouseover="this.style.backgroundColor='#d35400'" onmouseout="this.style.backgroundColor='#e67e22'">🗑️ حذف إعدادات</button>
+            
+            <button onclick="shutdownServer()" style="background-color: #c0392b; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 15px; font-weight: bold; transition: 0.2s;" onmouseover="this.style.backgroundColor='#e74c3c'" onmouseout="this.style.backgroundColor='#c0392b'">🛑 إيقاف الخادم</button>
+        </div>
+    </header>
+
+    <nav class="tabs-nav">
+        <button class="tab-btn active" onclick="openTab('tab-1', this)">1. البيانات الأساسية</button>
+        <button class="tab-btn" onclick="openTab('tab-2', this)">2. إدارة البيانات</button>
+        <button class="tab-btn" onclick="openTab('tab-3', this)">3. إسناد المواد</button>
+        <button class="tab-btn" onclick="openTab('tab-4', this)">4. هيكل الجدول</button>
+        <button class="tab-btn" onclick="openTab('tab-5', this)">5. القيود والشروط</button>
+        <button class="tab-btn" onclick="openTab('tab-6', this)">6. إنشاء الجداول</button>
+        <button class="tab-btn" onclick="openTab('tab-7', this)">7. النسخ الاحتياطي</button>
+    </nav>
+
+    <main class="content-area">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        function openTab(tabId, element) {
+            // إخفاء كل التبويبات
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            // إزالة اللون من كل الأزرار
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            // إظهار التبويب المطلوب وتلوين الزر
+            document.getElementById(tabId).classList.add('active');
+            element.classList.add('active');
+
+            // السطر الجديد: إذا تم فتح التبويب الثاني، قم بتحديث بيانات الجداول
+            if(tabId === 'tab-2' && typeof loadManageTables === 'function') {
+                loadManageTables();
+            }
+            // السطر الجديد للمرحلة 3:
+            if(tabId === 'tab-3' && typeof loadAssignmentsData === 'function') {
+                loadAssignmentsData();
+            }
+            // السطر الجديد للمرحلة 4:
+            if(tabId === 'tab-4' && typeof initStructureData === 'function') {
+                initStructureData();
+            }
+            // السطر الجديد للمرحلة 5:
+            if(tabId === 'tab-5' && typeof initConditionsData === 'function') {
+                initConditionsData();
+            }
+        }
+    </script>
+    <script>
+        document.getElementById('btn-shutdown').addEventListener('click', function() {
+            if (confirm("هل أنت متأكد أنك تريد إيقاف البرنامج والخروج؟")) {
+                fetch('/shutdown', {
+                    method: 'POST'
+                }).then(response => {
+                    document.body.innerHTML = "<h2 style='text-align:center; margin-top:20%; color:#2c3e50;'>تم إيقاف البرنامج بنجاح. يمكنك إغلاق هذه الصفحة.</h2>";
+                }).catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        });
+    </script>
+    <script>
+        function shutdownServer() {
+            if (confirm("هل أنت متأكد أنك تريد إيقاف الخادم وإغلاق النظام؟")) {
+                fetch('/shutdown', { method: 'POST' })
+                .then(() => {
+                    alert("تم إيقاف الخادم بنجاح. يمكنك الآن إغلاق هذه النافذة.");
+                    window.close(); // يحاول إغلاق التبويب تلقائياً
+                })
+                .catch(err => alert("تم إرسال أمر الإيقاف."));
+            }
+        }
+    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/manage.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/assignments.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/structure.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/conditions.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/generation.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/backup.js') }}"></script>
+</body>
+</html>

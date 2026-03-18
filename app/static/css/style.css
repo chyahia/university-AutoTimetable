@@ -1,0 +1,212 @@
+/* الإعدادات العامة للمشروع ونوع الخط */
+body { 
+    font-family: 'Tajawal', 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif; 
+    background-color: #f4f7f6; 
+    margin: 0; 
+    padding: 0; 
+    direction: rtl; 
+}
+
+/* 1. تكبير خط صندوق المستويات ونوع القاعات في المرحلة 1 */
+#course-levels-select, 
+#course-room-type, 
+#room-type {
+    font-size: 16px !important;
+    font-weight: bold;
+}
+
+/* 2. تكبير خطوط جداول القيود (الأوزان وغيرها) في المرحلة 5 */
+#tab-5 .master-table select, 
+#tab-5 .master-table input {
+    font-size: 15px !important;
+    font-weight: bold;
+}
+
+/* 1. إصلاح اتجاه النافذة السوداء (السجل الحي) وجعلها في الوسط */
+#generation-log, 
+#log-window, 
+.log-container {
+    direction: rtl !important;
+    text-align: center !important; /* التعديل هنا: محاذاة للوسط */
+    font-size: 16px !important;
+    line-height: 1.6;
+    padding: 15px !important;
+}
+
+/* 2. تكبير وتحسين مظهر جميع القوائم المنسدلة في المشروع */
+select {
+    font-size: 16px !important;
+    font-weight: bold !important;
+    padding: 8px 10px !important;
+    border: 1px solid #bdc3c7;
+    border-radius: 6px;
+    background-color: #f9fbfb;
+    color: #2c3e50;
+    outline: none;
+    cursor: pointer;
+    font-family: inherit; /* ليأخذ نفس خط المشروع (Tajawal أو Cairo) */
+    transition: all 0.3s ease;
+}
+
+/* تأثير جميل عند النقر على القائمة المنسدلة */
+select:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+}
+
+/* ========================================= */
+/* تحسينات المرحلة الخامسة (مرحلة القيود) */
+/* ========================================= */
+
+/* 1. تكبير خطوط الشرح في المرحلة 5 (كلا العمودين: القيود الصارمة والمرنة) */
+#tab-5 td, 
+#tab-5 th, 
+#tab-5 p, 
+#tab-5 li {
+    font-size: 16px !important;
+    line-height: 1.6;
+    color: #2c3e50;
+}
+
+/* 2. إعادة ضبط حجم خط جدول الأساتذة (master-table) ليبقى متناسقاً ولا يتشوه */
+#tab-5 .master-table td,
+#tab-5 .master-table th {
+    font-size: 14px !important; /* يمكنك تغييره لـ 15px إذا أردته أكبر قليلاً */
+}
+
+/* 3. تلوين صفوف جدول الأساتذة بالتناوب (Zebra Striping) - كما اتفقنا سابقاً */
+#tab-5 .master-table tbody tr:nth-child(even) {
+    background-color: #f2f6f8 !important;
+}
+#tab-5 .master-table tbody tr:nth-child(odd) {
+    background-color: #ffffff !important;
+}
+#tab-5 .master-table tbody tr:hover {
+    background-color: #d6eaf8 !important;
+    transition: background-color 0.2s ease;
+}
+
+/* إصلاح لون العناوين (الصف الأول) في جميع جداول المرحلة 5 */
+#tab-5 table th,
+#tab-5 .master-table th {
+    color: #ffffff !important; /* إجبار النص ليكون أبيض */
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5); /* إضافة ظل خفيف لزيادة الوضوح */
+}
+
+/* ========================================== */
+/* أدوات التحكم المتقدمة بالجدول بعد التوزيع */
+/* ========================================== */
+
+/* تصميم الحاوية الرئيسية */
+.action-panel {
+    background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+    border: 1px solid #e0e6ed;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 25px 0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+}
+
+.action-panel h4 {
+    color: #2c3e50;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #edf2f7;
+    padding-bottom: 10px;
+}
+
+/* زر التحسين السحري */
+.btn-magic {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 14px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(37, 117, 252, 0.3);
+}
+
+.btn-magic:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 117, 252, 0.4);
+}
+
+.btn-magic:active {
+    transform: translateY(1px);
+}
+
+.btn-magic:disabled {
+    background: #a0aec0;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* حاوية أزرار الذاكرة */
+.memory-container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
+    background: #f1f5f9;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px dashed #cbd5e1;
+}
+
+/* أزرار الحفظ */
+.btn-save {
+    background: #ffffff;
+    color: #059669;
+    border: 2px solid #059669;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-save:hover {
+    background: #059669;
+    color: #ffffff;
+}
+
+/* أزرار الاستعادة */
+.btn-restore {
+    background: #ea580c;
+    color: white;
+    border: 2px solid #ea580c;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(234, 88, 12, 0.2);
+}
+
+.btn-restore:hover {
+    background: #c2410c;
+    border-color: #c2410c;
+    transform: translateY(-1px);
+}
+
+.memory-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* الفاصل بين مجموعات الحفظ */
+.memory-divider {
+    width: 2px;
+    background: #cbd5e1;
+    margin: 0 10px;
+}

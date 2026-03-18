@@ -1,0 +1,547 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    
+    <section id="tab-1" class="tab-content active">
+        <h2>المرحلة 1: إدخال البيانات الأساسية</h2>
+        <p>قم بإدخال البيانات كل عنصر في سطر منفصل. اضغط باستمرار على Ctrl (أو Cmd) لاختيار أكثر من مستوى للمادة.</p>
+
+        <style>
+            .data-panel { flex: 1; min-width: 220px; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #ddd; display: flex; flex-direction: column; }
+            .preview-box { margin-top: 15px; padding: 10px; background: #fff; border: 1px dashed #bbb; border-radius: 4px; flex-grow: 1; max-height: 200px; overflow-y: auto; }
+            
+            /* التعديل هنا: جعلنا العرض block ليأخذ السطر كاملاً، وعدلنا الحواف لتناسب القوائم */
+            .data-tag { display: block; background: #e0e0e0; font-size: 13px; padding: 6px 10px; margin-bottom: 5px; border-radius: 4px; border: 1px solid #ccc; text-align: right; }
+            
+            .course-tag { display: block; background: #e8f4f8; font-size: 13px; padding: 6px 10px; margin-bottom: 5px; border-radius: 4px; border-left: 3px solid #3498db; }
+            .list-item { padding: 10px; border: 1px solid #ddd; margin-bottom: 5px; border-radius: 4px; display: flex; justify-content: space-between; font-weight: bold; font-size: 15px; }
+        </style>
+
+        <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 20px;">
+            
+            <div class="data-panel">
+                <h3>👨‍🏫 الأساتذة</h3>
+                <textarea id="teachers-input" rows="4" style="width: 100%; padding: 8px;" placeholder="مثال: أحمد محمد..."></textarea>
+                <button onclick="addTeachers()" style="margin-top: 10px; padding: 8px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">إضافة</button>
+                <div id="teachers-preview" class="preview-box"><i>لا يوجد أساتذة...</i></div>
+            </div>
+
+            <div class="data-panel">
+                <h3>🚪 القاعات</h3>
+                <select id="room-type-select" style="width: 100%; padding: 8px; margin-bottom: 5px;">
+                    <option value="عادية">عادية (أعمال موجهة)</option>
+                    <option value="مدرج">مدرج (محاضرات)</option>
+                    <option value="مخبر">مخبر (إعلام/لغات)</option>
+                </select>
+                <textarea id="rooms-input" rows="3" style="width: 100%; padding: 8px;" placeholder="مثال: قاعة 1..."></textarea>
+                <button onclick="addRooms()" style="margin-top: 10px; padding: 8px; background: #2ecc71; color: white; border: none; border-radius: 4px; cursor: pointer;">إضافة</button>
+                <div id="rooms-preview" class="preview-box"><i>لا توجد قاعات...</i></div>
+            </div>
+
+            <div class="data-panel">
+                <h3>🎓 المستويات</h3>
+                <textarea id="levels-input" rows="4" style="width: 100%; padding: 8px;" placeholder="مثال: السنة الأولى..."></textarea>
+                <button onclick="addLevels()" style="margin-top: 10px; padding: 8px; background: #9b59b6; color: white; border: none; border-radius: 4px; cursor: pointer;">إضافة</button>
+                <div id="levels-preview" class="preview-box"><i>لا توجد مستويات...</i></div>
+            </div>
+
+            <div class="data-panel">
+                <h3>📚 المواد</h3>
+                <select id="course-levels-select" multiple style="width: 100%; padding: 5px; margin-bottom: 5px; height: 200px;" title="اضغط Ctrl لتحديد أكثر من مستوى">
+                    </select>
+                <select id="course-room-type-select" style="width: 100%; padding: 5px; margin-bottom: 5px;">
+                    <option value="عادية">تُدرّس في: قاعة عادية</option>
+                    <option value="مدرج">تُدرّس في: مدرج</option>
+                    <option value="مخبر">تُدرّس في: مخبر</option>
+                </select>
+                <textarea id="courses-input" rows="3" style="width: 100%; padding: 8px;" placeholder="مثال: بلاغة عربية..."></textarea>
+                <button onclick="addCourses()" style="margin-top: 10px; padding: 8px; background: #e67e22; color: white; border: none; border-radius: 4px; cursor: pointer;">إضافة</button>
+                <div id="courses-preview" class="preview-box"><i>لا توجد مواد...</i></div>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="tab-2" class="tab-content">
+        <h2>المرحلة 2: عرض وإدارة البيانات المدخلة</h2>
+        <p>يمكنك هنا مراجعة البيانات التي أدخلتها وحذف ما لا تريده.</p>
+
+        <style>
+            .manage-table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; text-align: right; }
+            .manage-table th, .manage-table td { padding: 10px; border: 1px solid #ddd; }
+            .manage-table th { background-color: #f2f2f2; font-weight: bold; }
+            .btn-delete { background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+            .btn-edit { background: #f39c12; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-left: 5px; }
+            .btn-edit:hover { background: #e67e22; }
+            .btn-delete:hover { background: #c0392b; }
+            .table-container { flex: 1; min-width: 300px; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; max-height: 400px; overflow-y: auto;}
+            .list-item { padding: 10px; border: 1px solid #ddd; margin-bottom: 5px; border-radius: 4px; display: flex; justify-content: space-between; font-weight: bold; font-size: 15px; }
+        </style>
+
+        <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px;">
+            
+            <div class="table-container">
+                <h3>👨‍🏫 قائمة الأساتذة</h3>
+                <table class="manage-table" id="teachers-table">
+                    <thead><tr><th>الاسم</th><th>إجراء</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="table-container">
+                <h3>🚪 قائمة القاعات</h3>
+                <table class="manage-table" id="rooms-table">
+                    <thead><tr><th>الاسم</th><th>النوع</th><th>إجراء</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="table-container">
+                <h3>🎓 قائمة المستويات</h3>
+                <table class="manage-table" id="levels-table">
+                    <thead><tr><th>المستوى</th><th>إجراء</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="table-container" style="flex-basis: 100%;">
+                <h3>📚 قائمة المواد (المقررات)</h3>
+                <table class="manage-table" id="courses-table">
+                    <thead><tr><th>المادة</th><th>المستويات</th><th>نوع القاعة</th><th>إجراء</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="tab-3" class="tab-content">
+        <h2>المرحلة 3: إسناد المواد للأساتذة</h2>
+        <p>اختر أستاذًا من اليمين، ثم حدد المواد من اليسار، واضغط على "تخصيص". (انقر مرتين للإلغاء)</p>
+
+        <style>
+            .assign-container { display: flex; gap: 20px; height: 500px; margin-top: 15px; }
+            .assign-box { flex: 1; border: 1px solid #ccc; border-radius: 8px; background: #fff; display: flex; flex-direction: column; overflow: hidden; }
+            .assign-header { background: #2c3e50; color: white; padding: 10px; text-align: center; font-weight: bold; }
+            .assign-search { padding: 10px; border-bottom: 1px solid #ddd; background: #f9f9f9; }
+            .assign-search input { width: 95%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+            .assign-list { flex: 1; overflow-y: auto; padding: 10px; list-style: none; margin: 0; }
+            
+            /* تنسيقات العناصر */
+            .list-item { padding: 10px; border: 1px solid #eee; margin-bottom: 5px; border-radius: 4px; cursor: pointer; user-select: none; transition: 0.2s; }
+            .list-item:hover { background-color: #f1f2f6; }
+            
+            /* حالات الألوان (مؤشر، ملون، مسند) */
+            .is-selected { background-color: #d0e8f2 !important; border-color: #3498db; border-right: 5px solid #3498db; }
+            .is-assigned { background-color: #e8f5e9; border-color: #2ecc71; }
+            
+            /* المثلث والقوائم */
+            .toggle-btn { display: inline-block; width: 20px; text-align: center; cursor: pointer; font-size: 12px; color: #555; }
+            .teacher-courses-list { margin-top: 5px; padding-right: 20px; font-size: 13px; color: #555; display: none; }
+            .teacher-courses-list li { margin-bottom: 3px; }
+            .teacher-badge { background: #2ecc71; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; float: left; }
+            
+            /* زر التخصيص الرئيسي */
+            .btn-perform-assign { display: block; width: 100%; background: #3498db; color: white; padding: 15px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-bottom: 15px; transition: 0.3s; }
+            .btn-perform-assign:hover { background: #2980b9; }
+            .btn-perform-assign:disabled { background: #95a5a6; cursor: not-allowed; }
+        </style>
+
+        <button id="main-assign-btn" class="btn-perform-assign" onclick="performAssignment()" disabled>تخصيص المواد المحددة للأستاذ المختار</button>
+
+        <div class="assign-container">
+            <div class="assign-box">
+                <div class="assign-header">👨‍🏫 قائمة الأساتذة</div>
+                <div class="assign-search"><input type="text" id="search-teachers" placeholder="بحث عن أستاذ..." onkeyup="renderAssignments()"></div>
+                <div id="assign-teachers-list" class="assign-list"></div>
+            </div>
+
+            <div class="assign-box">
+                <div class="assign-header">📚 قائمة المواد</div>
+                <div class="assign-search"><input type="text" id="search-courses" placeholder="بحث عن مادة..." onkeyup="renderAssignments()"></div>
+                <div id="assign-courses-list" class="assign-list"></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="tab-4" class="tab-content">
+        <h2>المرحلة 4: إعداد هيكل الجدول الزمني</h2>
+        
+        <style>
+            .struct-toolbar { margin-bottom: 15px; display: flex; gap: 10px; }
+            .btn-add-day { background: #2c3e50; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
+            .btn-save-struct { background: #27ae60; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin-right: auto; }
+            
+            /* تبويبات الأيام */
+            .days-header { display: flex; border-bottom: 2px solid #bdc3c7; margin-bottom: 15px; overflow-x: auto; }
+            .day-tab { padding: 10px 20px; cursor: pointer; background: #ecf0f1; border: 1px solid #ccc; border-bottom: none; margin-left: 5px; border-radius: 5px 5px 0 0; }
+            .day-tab.active { background: #fff; font-weight: bold; border-top: 3px solid #3498db; border-bottom: 2px solid #fff; margin-bottom: -2px; }
+            
+            /* محتوى اليوم */
+            .day-content { display: none; background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 4px; }
+            .day-content.active { display: block; }
+            .day-actions { margin-bottom: 15px; border-bottom: 1px dashed #ccc; padding-bottom: 10px; }
+            
+            /* الفترات الزمنية (Slots) */
+            .time-slot { border: 1px solid #34495e; margin-bottom: 15px; border-radius: 5px; overflow: hidden; }
+            .slot-header { background: #34495e; color: white; padding: 10px; display: flex; align-items: center; gap: 10px; }
+            .slot-header input[type="time"] { padding: 5px; border-radius: 3px; border: none; }
+            .slot-body { padding: 15px; background: #f9f9f9; }
+            
+            /* القيود */
+            .constraint-box { background: #fff; border: 1px solid #bdc3c7; padding: 15px; margin-bottom: 10px; border-radius: 4px; border-right: 4px solid #e67e22; }
+            .levels-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 10px; background: #f1f2f6; padding: 10px; border-radius: 4px; }
+            .halls-dropdown { margin-top: 10px; display: none; background: #e8f4f8; padding: 10px; border-radius: 4px; border: 1px dashed #3498db; }
+        </style>
+
+        <div class="struct-toolbar">
+            <button class="btn-add-day" onclick="addDay()">➕ إضافة يوم جديد</button>
+            <button class="btn-save-struct" onclick="saveStructure()">💾 حفظ الهيكل</button>
+        </div>
+
+        <div id="days-tabs-container" class="days-header"></div>
+        <div id="days-content-container"></div>
+
+        <div id="day-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 1000;">
+            <div style="background: #fff; padding: 25px; border-radius: 8px; width: 320px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                <h3 id="day-modal-title" style="margin-top: 0; color: #2c3e50;">اختر اليوم</h3>
+                
+                <select id="selected-day" style="width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #bdc3c7; border-radius: 4px; font-size: 16px;">
+                    <option value="السبت">السبت</option>
+                    <option value="الأحد">الأحد</option>
+                    <option value="الإثنين">الإثنين</option>
+                    <option value="الثلاثاء">الثلاثاء</option>
+                    <option value="الأربعاء">الأربعاء</option>
+                    <option value="الخميس">الخميس</option>
+                    <option value="الجمعة">الجمعة</option>
+                </select>
+
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button onclick="confirmDaySelection()" style="flex: 1; background: #27ae60; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">تأكيد</button>
+                    <button onclick="closeDayModal()" style="flex: 1; background: #e74c3c; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    
+    </section>
+
+    <section id="tab-5" class="tab-content">
+        <h2>المرحلة 5: مرحلة القيود والشروط</h2>
+        <button onclick="saveAllConditions()" style="background:#27ae60; color:white; padding:10px 20px; border:none; border-radius:4px; cursor:pointer; font-weight:bold; margin-bottom:15px; width:100%;">💾 حفظ جميع القيود</button>
+
+        <style>
+            .cond-section { background: #fff; border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+            .cond-section h3 { margin-top: 0; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; }
+            .overview-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+            .overview-table th, .overview-table td { border: 1px solid #bdc3c7; padding: 8px; text-align: right; }
+            .overview-table th { background: #34495e; color: white; }
+            .strict-col { background: #ffeaa7; }
+            .flex-col { background: #dff9fb; }
+            
+            .scrollable-table-container { max-height: 300px; overflow-y: auto; border: 1px solid #ccc; border-radius: 4px; }
+            .master-table th { position: sticky; top: 0; background: #34495e; color: white; z-index: 1; font-size: 13px; }
+            .master-table td { font-size: 13px; }
+            
+            .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+            .small-scroll-box { max-height: 200px; overflow-y: auto; border: 1px solid #eee; padding: 10px; background: #fafafa; }
+        </style>
+
+        <div class="cond-section">
+            <h3>إدارة أوزان القيود (صارمة / مرنة)</h3>
+            
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                
+                <div style="flex: 1; min-width: 300px; background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px;">
+                    <h4 style="margin-top: 0; color: #856404;">🔒 قيود صارمة (ثابتة دائماً)</h4>
+                    <p style="font-size: 12px; color: #856404; margin-bottom: 10px;">هذه القيود أساسية لعمل البرنامج ولا يمكن تغييرها. أي خرق لها يعتبر خطأ فادحاً.</p>
+                    <ul style="font-size: 13px; padding-right: 20px; line-height: 1.8; color: #533f03; margin: 0;">
+                        <li>تعارض الأستاذ (نفس الأستاذ في نفس الوقت).</li>
+                        <li>تعارض القاعة (نفس القاعة في نفس الوقت).</li>
+                        <li>تعارض القاعة الكبيرة (أكثر من محاضرة في قاعة كبيرة).</li>
+                        <li>تعارض المعرفات (مثل الأعمال الموجهة لنفس المستوى).</li>
+                        <li>توزيع غير متناسق للمواد المشتركة.</li>
+                        <li>خرق فترة الراحة العامة (مثل مساء الثلاثاء).</li>
+                        <li>خرق قواعد الفترة الزمنية (مثل وضع مادة بقاعة كبيرة في فترة للقاعات الصغيرة فقط).</li>
+                        <li>خرق قيد الأيام اليدوية للأستاذ.</li>
+                    </ul>
+                </div>
+
+                <div style="flex: 1; min-width: 400px; background: #d1ecf1; border: 1px solid #bee5eb; padding: 15px; border-radius: 8px;">
+                    <h4 style="margin-top: 0; color: #0c5460;">⚙️ قيود قابلة للتحكم (مرنة/صارمة)</h4>
+                    <p style="font-size: 12px; color: #0c5460; margin-bottom: 10px;">حدد مستوى الأهمية لهذه القيود. "المرن" هو تفضيل، و"الصارم" هو شرط إلزامي.</p>
+                    
+                    <table style="width: 100%; font-size: 13px; border-collapse: collapse; color: #0c5460;">
+                        <tbody>
+                            <script>
+                                // سكربت صغير لتوليد خيارات القائمة المنسدلة لعدم تكرار الكود
+                                const weightOptions = `
+                                    <option value="strict">صارم (إلزامي)</option>
+                                    <option value="20">مهم جدا (عقوبة: 20 نقطة)</option>
+                                    <option value="10" selected>مهم (عقوبة: 10 نقطة)</option>
+                                    <option value="1">تفضيل بسيط (عقوبة: 1 نقطة)</option>
+                                    <option value="0">غير مهم (معطل)</option>
+                                `;
+                                const constraints = [
+                                    {id: 'weight_distribution', name: 'قيد التوزيع (أيام متتالية/منفصلة)'},
+                                    {id: 'weight_no_share', name: 'قيد منع تشارك الأساتذة في الأيام'},
+                                    {id: 'weight_saturday', name: 'قيد العمل يوم السبت'},
+                                    {id: 'weight_last_slot', name: 'قيد منع آخر الحصص'},
+                                    {id: 'weight_max_daily', name: 'قيد الحد الأقصى للحصص اليومية'},
+                                    {id: 'weight_share_pairs', name: 'قيد اشتراك أزواج الأساتذة'},
+                                    {id: 'weight_consecutive_halls', name: 'قيد منع توالي القاعات الكبيرة'},
+                                    {id: 'weight_morning_pref', name: 'قيد تفضيل الفترات الصباحية (ضغط الحصص)'}
+                                ];
+                                constraints.forEach(c => {
+                                    document.write(`
+                                    <tr style="border-bottom: 1px solid #bee5eb;">
+                                        <td style="padding: 6px 0;">${c.name}</td>
+                                        <td style="padding: 6px 0; text-align: left;">
+                                            <select id="${c.id}" style="padding: 4px; border-radius: 3px; border: 1px solid #17a2b8; outline: none;">
+                                                ${weightOptions}
+                                            </select>
+                                        </td>
+                                    </tr>`);
+                                });
+                            </script>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px; padding: 12px; background: #e2e3e5; border-right: 5px solid #6c757d; border-radius: 4px; font-size: 13px; color: #383d41;">
+                <strong>ملاحظة هامة:</strong> قيد "أوقات البدء والانتهاء" يصبح <span style="color:#c0392b; font-weight:bold;">صارماً</span> تلقائياً عند تحديد أيام عمل الأستاذ يدوياً، ويبقى <span style="color:#27ae60; font-weight:bold;">مرناً</span> عند ترك الأيام للتوزيع التلقائي (الخوارزمية لها حرية الاختيار).
+            </div>
+        </div>
+
+        <div class="cond-section">
+            <h3>قيد المعرفات (منع التكرار في نفس الفترة)</h3>
+            <p style="font-size:13px; color:#7f8c8d;">أدخل المعرفات التي لا يجب أن تتكرر في نفس الفترة الزمنية لكل مستوى (كل معرف في سطر).</p>
+            <div id="identifiers-container" style="display: flex; gap: 15px; flex-wrap: wrap;"></div>
+        </div>
+
+        <div class="cond-section">
+            <h3>تحديد أيام وقيود عمل الأساتذة (الأهم)</h3>
+            <div class="scrollable-table-container">
+                <table class="overview-table master-table" id="master-teachers-table">
+                    <thead>
+                        <tr id="master-teachers-header">
+                            </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            
+            <div style="margin-top: 15px; background: #fdfad9; padding: 10px; border-radius: 4px; border: 1px solid #f1c40f;">
+                <strong>كيفية التعامل مع الأيام غير المحددة (عند اختيار تجميع/تفرقة):</strong><br>
+                <label><input type="radio" name="days_rule" value="flexible" checked> الأيام مجموعة مسموحة (مرن): يلتزم بالحد الأقصى للأيام فقط.</label><br>
+                <label><input type="radio" name="days_rule" value="strict"> الأيام مجموعة مطلوبة (صارم): يجب استخدام العدد المحدد بالضبط.</label>
+            </div>
+        </div>
+
+        <div class="grid-container">
+            <div class="cond-section">
+                <h3>قيود زمنية ومكانية عامة</h3>
+                <label><strong>الحد الأقصى للحصص في اليوم:</strong>
+                    <select id="max-slots-per-day">
+                        <option value="unlimited">غير محدد</option>
+                        <option value="2">حصتان</option>
+                        <option value="3">3 حصص</option>
+                        <option value="4">4 حصص</option>
+                    </select>
+                </label><br><br>
+
+                <label><strong>قيد توالي القاعات الكبيرة:</strong>
+                    <select id="consecutive-halls-rule">
+                        <option value="none">لا يوجد منع (السماح بالتوالي)</option>
+                        </select>
+                </label><br><br>
+
+                <strong>فترات الراحة (لن توضع فيها حصص):</strong><br>
+                <label><input type="checkbox" id="rest-tue-pm"> مساء الثلاثاء (آخر حصتين)</label><br>
+                <label><input type="checkbox" id="rest-thu-pm"> مساء الخميس (آخر حصتين)</label>
+            </div>
+
+            <div class="cond-section">
+                <h3>تخصيص المدرجات لكل مستوى</h3>
+                <div class="small-scroll-box" id="level-amphis-container"></div>
+            </div>
+        </div>
+
+        <div class="grid-container">
+            <div class="cond-section">
+                <h3>العمل يوم السبت وآخر الحصص</h3>
+                <div class="small-scroll-box">
+                    <table class="overview-table" id="special-teachers-table" style="font-size:12px;">
+                        <thead><tr><th>الأستاذ</th><th>السماح بالسبت</th><th>منع آخر حصص</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="cond-section">
+                <h3>تشارك أيام العمل (اختياري)</h3>
+                <strong>إجبار التشارك:</strong>
+                <div id="share-days-container"></div>
+                <button onclick="addPairRow('share-days-container')" style="font-size:11px;">+ إضافة زوج</button>
+                <br><br>
+                <strong>منع التشارك:</strong>
+                <div id="noshare-days-container"></div>
+                <button onclick="addPairRow('noshare-days-container')" style="font-size:11px;">+ إضافة زوج</button>
+            </div>
+        </div>
+
+        <div class="cond-section" style="background: #f4f9f4; border-color: #27ae60;">
+            <h3>إعدادات خوارزمية التحسين (سد الفجوات)</h3>
+            <p style="font-size:13px;">تُنفذ بعد اكتمال التوزيع.</p>
+            
+            <strong>اختر الأساتذة لتطبيق التحسين عليهم:</strong>
+            <div class="small-scroll-box" id="optimization-teachers" style="margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 10px;"></div>
+
+        </div>
+        <button onclick="saveAllConditions()" style="background:#27ae60; color:white; padding:10px 20px; border:none; border-radius:4px; cursor:pointer; font-weight:bold; margin-bottom:15px; width:100%;">💾 حفظ جميع القيود</button>
+    </section>
+
+    <section id="tab-6" class="tab-content">
+        <h2>المرحلة 6: إنشاء الجداول الدراسية</h2>
+        
+        <div class="gen-panel" style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+            <h3 style="margin-top: 0;">إعدادات خوارزمية التوزيع</h3>
+            
+            <div style="margin: 15px 0; border: 1px dashed #28a745; padding: 15px; border-radius: 6px; background-color: #f0fff4;">
+                <label style="cursor: pointer; font-size: 16px; font-weight: bold; display: block; color: #2c3e50;">
+                    <input type="checkbox" id="strict-hierarchy-chk" checked style="transform: scale(1.2); margin-left: 10px;">
+                    تفعيل التسلسل الهرمي الصارم للأخطاء
+                </label>
+                <small style="display: block; margin-top: 5px; color: #555; font-size: 13px;">
+                    (عند تفعيله، يجب على الخوارزمية حل كل الأخطاء الصارمة أولاً قبل الالتفات للأخطاء المرنة).
+                </small>
+            </div>
+
+            <strong>اختر الخوارزميات المساعدة (التحسين):</strong><br><br>
+            <div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
+                <div style="background: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    <label style="cursor: pointer; font-weight: bold;">
+                        <input type="checkbox" class="algo-chk" value="tabu" checked onchange="document.getElementById('tabu-settings').style.display = this.checked ? 'block' : 'none'"> البحث المحظور (Tabu Search)
+                    </label>
+                    <div id="tabu-settings" style="margin-top: 10px; padding-right: 25px;">
+                        <label>التكرارات: <input type="number" id="tabu_iter" value="1000" style="width: 70px; margin-left:15px;"></label>
+                        <label>الذاكرة: <input type="number" id="tabu_tenure" value="10" style="width: 60px; margin-left:15px;"></label>
+                    </div>
+                </div>
+
+                <div style="background: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    <label style="cursor: pointer; font-weight: bold;">
+                        <input type="checkbox" class="algo-chk" value="lns" checked onchange="document.getElementById('lns-settings').style.display = this.checked ? 'block' : 'none'"> البحث الجِوَاري الواسع (LNS)
+                    </label>
+                    <div id="lns-settings" style="margin-top: 10px; padding-right: 25px;">
+                        <label>التكرارات: <input type="number" id="lns_iter" value="500" style="width: 70px; margin-left:15px;"></label>
+                        <label>نسبة التدمير (Ruin): <input type="number" id="lns_ruin" value="20" style="width: 60px; margin-left:15px;"> %</label>
+                    </div>
+                </div>
+
+                <div style="background: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    <label style="cursor: pointer; font-weight: bold;">
+                        <input type="checkbox" class="algo-chk" value="vns" checked onchange="document.getElementById('vns-settings').style.display = this.checked ? 'block' : 'none'"> البحث الجِوَاري المتغير (VNS)
+                    </label>
+                    <div id="vns-settings" style="margin-top: 10px; padding-right: 25px;">
+                        <label>التكرارات: <input type="number" id="vns_iter" value="300" style="width: 70px; margin-left:15px;"></label>
+                        <label>أقصى جوار (k): <input type="number" id="vns_k" value="5" style="width: 60px; margin-left:15px;"></label>
+                    </div>
+                </div>
+            </div>
+
+            <button id="btn-start-gen" onclick="startGeneration()" style="display: block; width: 100%; background: #2980b9; color: white; padding: 15px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s;">🚀 بدء إنشاء الجداول الدراسية</button>
+            <button id="btn-stop-gen" onclick="stopGeneration()" style="display: none; width: 100%; background: #e74c3c; color: white; padding: 15px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; margin-top: 10px;">🛑 إيقاف البحث</button>
+        </div>
+        
+        <div id="live-log-container" style="display: none; margin-top: 20px;">
+            <h3>📡 المتابعة الحية لعمل الخوارزمية</h3>
+            <pre id="log-output" style="direction: rtl; text-align: center; font-size: 16px; background-color: #111; color: #2ecc71; padding: 20px; border-radius: 8px; height: 350px; overflow-y: auto; white-space: pre-wrap; font-family: inherit; font-weight: bold; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); border: 2px solid #333;"></pre>
+            <div id="progress-container" style="width: 100%; background-color: #e0e0e0; border-radius: 8px; margin-top: 15px; overflow: hidden; display: none; border: 1px solid #bdc3c7; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+                <div id="progress-bar" style="width: 0%; height: 30px; background-color: #e74c3c; text-align: center; line-height: 30px; color: white; font-weight: bold; font-size: 16px; transition: width 0.4s ease, background-color 0.4s ease; background-image: linear-gradient(45deg, rgba(255,255,255,.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.15) 75%, transparent 75%, transparent); background-size: 40px 40px;">
+                    0%
+                </div>
+            </div>
+        </div>
+        <div class="action-panel">
+            <h4>🛠️ أدوات التحكم والتحسين المتقدمة</h4>
+            
+            <div>
+                <button id="btn-refine" class="btn-magic" onclick="refineSchedule()">
+                    ✨ ضغط وتحسين جداول الأساتذة (سد الفجوات)
+                </button>
+                
+                <div style="margin-top: 15px; padding: 12px 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px;">
+                    <strong style="display: block; margin-bottom: 8px; color: #334155;">⚙️ حدد عمق خوارزمية الضغط:</strong>
+                    <div style="display: flex; flex-direction: column; gap: 8px; color: #475569;">
+                        <label style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                            <input type="radio" name="opt_level" value="simple"> 
+                            <span>🟢 <strong>بسيط (سريع):</strong> سد الفجوات في نهاية اليوم فقط.</span>
+                        </label>
+                        <label style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                            <input type="radio" name="opt_level" value="balanced" checked> 
+                            <span>🟡 <strong>متوازن (موصى به):</strong> ضغط شامل للحصص المتأخرة.</span>
+                        </label>
+                        <label style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                            <input type="radio" name="opt_level" value="deep"> 
+                            <span>🔴 <strong>عميق (أبطأ):</strong> إعادة بناء وتنقيل الحصص بين الأيام المختلفة.</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="memory-container">
+                <div class="memory-group">
+                    <button class="btn-save" onclick="saveResult(1)">💾 حفظ النتيجة 1</button>
+                    <button id="btn-restore-1" class="btn-restore" onclick="restoreResult(1)" style="display: none;">📂 استعادة 1</button>
+                </div>
+                
+                <div class="memory-divider"></div>
+                
+                <div class="memory-group">
+                    <button class="btn-save" onclick="saveResult(2)">💾 حفظ النتيجة 2</button>
+                    <button id="btn-restore-2" class="btn-restore" onclick="restoreResult(2)" style="display: none;">📂 استعادة 2</button>
+                </div>
+            </div>
+        </div>
+        <div id="schedule-results-container" style="display: none; margin-top: 20px;">
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; text-align: center;">
+                <h3 style="margin-top: 0; color: #27ae60;">✅ تمت عملية الجدولة بنجاح!</h3>
+                <p>اختر ما تريد تصديره أو استعرض جداول المستويات بالأسفل:</p>
+                
+                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-top: 15px;">
+                    <button onclick="exportFiles('/api/export/word/all-levels', 'جداول_المستويات.docx')" style="background: #2980b9; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">📄 تصدير جداول المستويات (Word)</button>
+                    
+                    <button onclick="exportFiles('/api/export/word/all-professors', 'جداول_الأساتذة.docx', true)" style="background: #2c3e50; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">👨‍🏫 تصدير جداول الأساتذة (Word)</button>
+                    
+                    <button onclick="exportFiles('/api/export/free-rooms', 'القاعات_الفارغة.xlsx', false, true)" style="background: #27ae60; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">🚪 تصدير القاعات الفارغة (Excel)</button>
+                    
+                    <button onclick="exportPedagogicalLoad()" style="background: #8e44ad; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">📊 تصدير العبء البيداغوجي (Excel)</button>
+                </div>
+            </div>
+            
+            <div id="rendered-tables" style="background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 8px;"></div>
+        </div>
+    </section>
+
+    <section id="tab-7" class="tab-content">
+        <h2>المرحلة 7: النسخ الاحتياطي والاستعادة</h2>
+        <p>يمكنك من هنا أخذ نسخة احتياطية لجميع بياناتك (الأساتذة، المواد، القيود، الهيكل) أو استعادتها لضمان عدم ضياعها.</p>
+        
+        <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px;">
+            <div style="flex: 1; min-width: 250px; background: #f9f9f9; padding: 25px; border-radius: 8px; border: 1px solid #ddd; text-align: center;">
+                <h3 style="margin-top: 0; color: #27ae60;">📥 أخذ نسخة احتياطية (تحميل)</h3>
+                <p style="font-size: 13px; color: #555; margin-bottom: 20px;">سيتم تحميل ملف قاعدة البيانات الكامل (بصيغة .db) والذي يحتوي على كل إعداداتك وبياناتك.</p>
+                <a href="/api/backup/export" style="display: inline-block; background: #27ae60; color: white; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 16px;">تحميل النسخة الاحتياطية</a>
+            </div>
+
+            <div style="flex: 1; min-width: 250px; background: #f9f9f9; padding: 25px; border-radius: 8px; border: 1px solid #ddd; text-align: center;">
+                <h3 style="margin-top: 0; color: #e74c3c;">📤 استعادة نسخة احتياطية (رفع)</h3>
+                <p style="font-size: 13px; color: #555; margin-bottom: 20px;">اختر ملف النسخة الاحتياطية السابق لرفعه. <strong style="color: red;">تحذير:</strong> هذا سيمسح البيانات الحالية!</p>
+                <input type="file" id="backup-file" accept=".db" style="display: block; margin: 0 auto 15px auto; padding: 10px; border: 1px dashed #ccc; width: 80%; background: #fff;">
+                <button onclick="restoreBackup()" style="background: #e74c3c; color: white; padding: 12px 25px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 16px;">رفع واستعادة البيانات</button>
+            </div>
+        </div>
+    </section>
+
+{% endblock %}
